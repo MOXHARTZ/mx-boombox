@@ -1,12 +1,15 @@
-on:
-  workflow_dispatch:
-
+name: discord message
+on: [push]
 jobs:
-  message:
+
+  build:
+    name: Build
     runs-on: ubuntu-latest
     steps:
-    - name: Discord Webhook Action
-      uses: tsickert/discord-webhook@v5.3.0
+    - uses: actions/checkout@master
+    - name: send custom message with args
+      uses: appleboy/discord-action@master
       with:
-        webhook-url: ${{ secrets.WEBHOOK_URL }}
-        content: "Test"
+        webhook_id: ${{ secrets.WEBHOOK_ID }}
+        webhook_token: ${{ secrets.WEBHOOK_TOKEN }}
+        args: The ${{ github.event_name }} event triggered first step.
