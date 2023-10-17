@@ -2,50 +2,112 @@ import { BiSkipPrevious, BiPause, BiPlay, BiSkipNext } from 'react-icons/bi'
 import { FaVolumeDown, FaVolumeUp } from 'react-icons/fa'
 import Stack from '@mui/material/Stack';
 import Slider from '@mui/material/Slider';
-import { useCallback, useState } from 'react';
-import { styled, useTheme } from '@mui/material/styles';
-import { Box } from '@mui/material';
+import { memo, useCallback, useState } from 'react';
+import { useTheme } from '@mui/material/styles';
+import { Box, IconButton } from '@mui/material';
+import { useAppDispatch, useAppSelector } from '@/stores';
+import { setPlaying, setTimeStamp, setVolume } from '@/stores/Main';
+import { toast } from 'react-toastify';
+import { handlePlay } from '@/thunks/handlePlay';
+import { fetchNui } from '@/utils/fetchNui';
 
 const Header = () => {
     const theme = useTheme();
-    const [volume, setVolume] = useState<number>(30);
+    const dispatch = useAppDispatch()
+    const { position, playing, timeStamp, volume, playlist } = useAppSelector(state => state.Main)
+    const [seeking, setSeeking] = useState<number | false>(false)
     const volumeOnChange = useCallback((_: any, newValue: number | number[]) => {
-        setVolume(newValue as number);
+        dispatch(setVolume(newValue as number));
     }, []);
-    const [position, setPosition] = useState<number>(32);
-    const duration = 200; // seconds
     function formatDuration(value: number) {
         const minute = Math.floor(value / 60);
         const secondLeft = value - minute * 60;
-        return `${minute}:${secondLeft < 10 ? `0${secondLeft}` : secondLeft}`;
+        const formattedSecond = secondLeft < 10 ? `0${secondLeft}` : secondLeft;
+        return `${minute}:${formattedSecond}`;
     }
+    const previousBtn = useCallback(async () => {
+        const newPos = position === -1 ? 0 : position - 1
+        if (!playlist.find(song => song.id === newPos)) return toast.error('No more songs in playlist');
+        dispatch(setPlaying(false))
+        dispatch(handlePlay({
+            position: newPos,
+            soundData: playlist.find(song => song.id === newPos)!,
+            volume: volume
+        }))
+    }, [position, playlist])
+    const nextBtn = useCallback(async () => {
+        const newPos = position === -1 ? 0 : position + 1
+        if (!playlist.find(song => song.id === newPos)) return toast.error('No more songs in playlist');
+        dispatch(setPlaying(false))
+        dispatch(handlePlay({
+            position: newPos,
+            soundData: playlist.find(song => song.id === newPos)!,
+            volume: volume
+        }))
+    }, [position, playlist])
+    setInterval(async () => {
+        if (playing && !seeking) {
+            let currentTimeStamp: number = await fetchNui('getCurrentTimeStamp')
+            currentTimeStamp = Math.floor(currentTimeStamp)
+            dispatch(setTimeStamp(currentTimeStamp))
+        }
+    }, 1000)
+    const currentSong = useAppSelector(state => state.Main.playlist.find(song => song.id === position))
     return (
         <header className='grid grid-cols-3 w-full justify-between items-center gap-24'>
             <article className='flex flex-row gap-4'>
                 <img src='https://picsum.photos/300/300' width={64} height={32} className='rounded-lg object-cover' alt='playlist' />
                 <article className='flex flex-col'>
                     <section>
-                        <h2>Song Name</h2>
-                        <p className='text-gray-500'>Author Name</p>
+                        <h2>{currentSong?.title ?? 'Title'}</h2>
+                        <p className='text-gray-500'>{currentSong?.artist ?? 'Artist'}</p>
                     </section>
                 </article>
             </article>
             <article className='w-full flex flex-col'>
-                <section className='w-full flex-shrink-0 flex-1 flex flex-row justify-between'>
-                    {/* previous icon */}
-                    <BiSkipPrevious size={42} />
-                    <BiPause size={42} />
-                    {/* <BiPlay size={32} /> */}
-                    <BiSkipNext size={42} />
-                </section>
+                <Box
+                    sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        mt: -1,
+                    }}
+                >
+                    <IconButton aria-label="previous song" onClick={previousBtn}>
+                        <BiSkipPrevious size={40} color='#fff' />
+                    </IconButton>
+                    <IconButton
+                        aria-label={playing ? 'pause' : 'play'}
+                        onClick={() => position !== -1 && dispatch(setPlaying(!playing))}
+                    >
+                        {playing ? (
+                            <BiPause size={54} color='#fff' />
+                        ) : (
+                            <BiPlay size={54} color='#fff' />
+                        )}
+                    </IconButton>
+                    <IconButton aria-label="next song" onClick={nextBtn}>
+                        <BiSkipNext size={40} color='#fff' />
+                    </IconButton>
+                </Box>
                 <Slider
                     aria-label="time-indicator"
                     size="small"
-                    value={position}
+                    value={seeking !== false ? seeking : timeStamp}
                     min={0}
                     step={1}
-                    max={duration}
-                    onChange={(_, value) => setPosition(value as number)}
+                    max={currentSong?.duration ?? 0}
+                    onChange={(_, value) => dispatch(setTimeStamp(value as number))}
+                    onChangeCommitted={async (_, value) => {
+                        if (!currentSong) return
+                        setSeeking(value as number)
+                        await fetchNui('seek', {
+                            position: value as number
+                        })
+                        setTimeout(() => {
+                            setSeeking(false)
+                        }, 1000)
+                    }}
                     sx={{
                         color: theme.palette.mode === 'dark' ? '#fff' : 'rgba(0,0,0,0.87)',
                         height: 8,
@@ -80,15 +142,41 @@ const Header = () => {
                         mt: -2,
                     }}
                 >
-                    <p className='text-sm opacity-40 font-medium mt-2'>{formatDuration(position)}</p>
-                    <p className='text-sm opacity-40 font-medium mt-2'>-{formatDuration(duration - position)}</p>
+                    <p className='text-sm opacity-40 font-medium mt-2'>{formatDuration(timeStamp)}</p>
+                    <p className='text-sm opacity-40 font-medium mt-2'>-{formatDuration((currentSong?.duration ?? 0) - timeStamp)}</p>
                 </Box>
             </article>
-            <article className='w-full m-auto'>
-                <Stack spacing={2} direction="row" sx={{ mb: 1 }} alignItems="center">
-                    <FaVolumeDown size={28} />
-                    <Slider aria-label="Volume" value={volume} onChange={volumeOnChange} />
-                    <FaVolumeUp size={28} />
+            <article className='w-[80%] m-auto'>
+                <Stack
+                    spacing={2}
+                    direction="row"
+                    sx={{
+                        mb: 1,
+                        // color: theme.palette.mode === 'dark' ? '#fff' : 'rgba(0,0,0,0.2)',
+                        '& .MuiSlider-root': {
+                            color: theme.palette.mode === 'dark' ? '#fff' : 'rgba(0,0,0,0.87)',
+                            // width: 100,
+                            '& .MuiSlider-thumb': {
+                                '&:before': {
+                                    boxShadow: '0 2px 12px 0 rgba(0,0,0,0.4)',
+                                },
+                                '&:hover, &.Mui-focusVisible': {
+                                    boxShadow: `0px 0px 0px 8px ${theme.palette.mode === 'dark'
+                                        ? 'rgb(255 255 255 / 16%)'
+                                        : 'rgb(0 0 0 / 16%)'
+                                        }`,
+                                },
+                                '&.Mui-active': {
+                                    width: 16,
+                                    height: 16,
+                                },
+                            },
+                        },
+                    }}
+                    alignItems="center">
+                    <FaVolumeDown size={24} />
+                    <Slider aria-label="Volume" value={volume} max={1} step={0.01} onChange={volumeOnChange} onChangeCommitted={(_, value) => fetchNui('setVolume', { volume: value as number })} />
+                    <FaVolumeUp size={24} />
                 </Stack>
             </article>
 
@@ -96,4 +184,4 @@ const Header = () => {
     )
 }
 
-export default Header
+export default memo(Header)

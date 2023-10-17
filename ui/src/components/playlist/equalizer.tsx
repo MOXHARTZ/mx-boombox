@@ -1,4 +1,4 @@
-import React from 'react'
+import { memo } from 'react'
 
 const Equalizer = () => {
     return (
@@ -19,4 +19,4 @@ const Equalizer = () => {
     )
 }
 
-export default Equalizer
+export default memo(Equalizer)

@@ -5,10 +5,9 @@ client_script 'client.lua'
 server_script 'server.lua'
 lua54 'yes'
 
-ui_page 'html/index.html'
+ui_page 'ui/build/index.html'
 
 files({
-    'html/index.html',
-    'html/script.js',
-    'html/style.css',
+    'ui/build/index.html',
+    'ui/build/**/*',
 })
