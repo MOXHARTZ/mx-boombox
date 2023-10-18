@@ -29,15 +29,22 @@ RegisterNUICallback('togglePlay', function(data, cb)
     if not current_sound then return end
     current_sound.playing = data.playing
     if current_sound.playing then
-        exports['mx-surround']:Resume(current_sound.soundId)
+        TriggerServerEvent('mx-boombox:resume', current_sound.soundId)
     else
-        exports['mx-surround']:Pause(current_sound.soundId)
+        TriggerServerEvent('mx-boombox:pause', current_sound.soundId)
     end
     cb('ok')
 end)
 
+RegisterNUICallback('getSoundData', function(data, cb)
+    local url = data.url
+    local info = exports['mx-surround']:getInfoFromUrl(url)
+    cb(info)
+end)
+
 RegisterNUICallback('setPlaylist', function(data, cb)
     playlist = data.playlist
+    SetResourceKvp('boombox_playlist', json.encode(playlist))
     cb('ok')
 end)
 
@@ -50,6 +57,13 @@ local function openUi()
         action = 'open'
     })
 end
+
+RegisterNUICallback('getPlaylist', function(data, cb)
+    local _playlist = GetResourceKvpString('boombox_playlist')
+    if not _playlist then return cb({}) end
+    playlist = json.decode(_playlist)
+    return cb(playlist)
+end)
 
 RegisterNUICallback('play', function(data, cb)
     if not current_boombox then return end
@@ -84,7 +98,7 @@ end)
 
 RegisterNUICallback('seek', function(data, cb)
     if not current_sound then return cb(0) end
-    exports['mx-surround']:setTimeStamp(current_sound.soundId, data.position)
+    TriggerServerEvent('mx-boombox:seek', current_sound.soundId, data.position)
     cb('ok')
 end)
 

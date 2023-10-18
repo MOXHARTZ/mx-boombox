@@ -54,7 +54,7 @@ const Playlist = () => {
                     </aside>
                     <aside className='flex justify-between items-center w-full'>
                         <article className='flex flex-row items-center gap-4'>
-                            <img src={song.cover} width={24} height={24} className='' alt='playlist' />
+                            <img src={song.cover} className='w-16 h-12' alt='playlist' />
                             <div className='flex flex-col'>
                                 <h2>{song.title}</h2>
                                 <p className='text-slate-400'>{song.artist}</p>

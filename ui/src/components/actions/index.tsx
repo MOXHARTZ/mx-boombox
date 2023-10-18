@@ -7,6 +7,7 @@ import { memo, useCallback, useState } from 'react'
 import { useAutoAnimate } from '@formkit/auto-animate/react'
 import { toast } from 'react-toastify';
 import { generateSoundId } from '@/utils/misc'
+import { fetchNui } from '@/utils/fetchNui'
 
 const Actions = () => {
     const { editMode, selectedSongs, playlist, position } = useAppSelector(state => state.Main)
@@ -34,15 +35,19 @@ const Actions = () => {
     const handleClose = useCallback(() => {
         setOpen(false);
     }, []);
-    const handlePlay = useCallback(() => {
+    const handlePlay = useCallback(async () => {
         handleClose()
         if (!soundUrl) return;
+        console.log(soundUrl)
+        const response = await fetchNui<{ title: string; artist: string; thumbnail: string }>('getSoundData', { url: soundUrl })
+        if (!response) return toast.error('Invalid url');
+        console.log(response)
         const soundData = {
             id: playlist.length + 1,
             soundId: generateSoundId(5),
-            title: 'Test',
-            artist: 'Test',
-            cover: 'https://i.ytimg.com/vi/2Vv-BfVoq4g/maxresdefault.jpg',
+            title: response?.title,
+            artist: response?.artist,
+            cover: response?.thumbnail,
             url: soundUrl,
             duration: 0,
         }

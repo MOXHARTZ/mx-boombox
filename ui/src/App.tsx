@@ -6,16 +6,19 @@ import Actions from './components/actions'
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Backdrop, CircularProgress } from '@mui/material'
-import { useAppSelector } from './stores'
+import { useAppDispatch, useAppSelector } from './stores'
 import useNuiEvent from './hooks/useNuiEvent'
 import { useExitListener } from './hooks/useExitListener'
 import { fetchNui } from './utils/fetchNui'
 import { motion } from "framer-motion"
+import { setPlaylist } from './stores/Main'
+import { Song } from './fake-api/song'
 
 
 function App() {
   const waitingForResponse = useAppSelector(state => state.Main.waitingForResponse)
   const [visible, setVisible] = useState(IN_DEVELOPMENT);
+  const dispatch = useAppDispatch()
   useEffect(() => {
     if (!IN_DEVELOPMENT) return;
     document.body.style.backgroundImage = 'url(https://wallpaperaccess.com/full/707055.jpg)'
@@ -23,6 +26,12 @@ function App() {
   useNuiEvent('open', () => {
     setVisible(true)
   })
+  useEffect(() => {
+    (async () => {
+      const _playlist: Song[] = await fetchNui('getPlaylist')
+      dispatch(setPlaylist(_playlist))
+    })()
+  }, [])
   useExitListener(() => {
     setVisible(false)
     fetchNui('close')
