@@ -2,7 +2,7 @@ import { BiSkipPrevious, BiPause, BiPlay, BiSkipNext } from 'react-icons/bi'
 import { FaVolumeDown, FaVolumeUp } from 'react-icons/fa'
 import Stack from '@mui/material/Stack';
 import Slider from '@mui/material/Slider';
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback, useEffect, useState } from 'react';
 import { useTheme } from '@mui/material/styles';
 import { Box, IconButton } from '@mui/material';
 import { useAppDispatch, useAppSelector } from '@/stores';
@@ -45,13 +45,21 @@ const Header = () => {
             volume: volume
         }))
     }, [position, playlist])
-    setInterval(async () => {
-        if (playing && !seeking) {
-            let currentTimeStamp: number = await fetchNui('getCurrentTimeStamp')
-            currentTimeStamp = Math.floor(currentTimeStamp)
-            dispatch(setTimeStamp(currentTimeStamp))
-        }
-    }, 1000)
+    useEffect(() => {
+        const interval = setInterval(async () => {
+            if (playing) {
+                let currentTimeStamp: number = await fetchNui('getCurrentTimeStamp')
+                currentTimeStamp = Math.floor(currentTimeStamp)
+                dispatch(setTimeStamp(currentTimeStamp))
+            }
+            const duration = playlist.find(song => song.id === position)?.duration
+            if (playing && duration && timeStamp === duration) {
+                nextBtn()
+            }
+        }, 1000)
+        return () => clearInterval(interval)
+    }, [playlist, playing, position, timeStamp])
+
     const currentSong = useAppSelector(state => state.Main.playlist.find(song => song.id === position))
     return (
         <header className='grid grid-cols-3 w-full justify-between items-center gap-24'>
