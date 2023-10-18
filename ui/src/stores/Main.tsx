@@ -10,7 +10,7 @@ export interface StaticType {
     position: number;
     playlist: Song[];
     editMode: boolean;
-    selectedSongs: number[];
+    selectedSongs: string[];
     timeStamp: number;
     volume: number;
     waitingForResponse: boolean;
@@ -44,7 +44,7 @@ const Static = createSlice({
         setEditMode: (state, action: PayloadAction<boolean>) => {
             state.editMode = action.payload;
         },
-        setSelectedSongs: (state, action: PayloadAction<number[]>) => {
+        setSelectedSongs: (state, action: PayloadAction<string[]>) => {
             state.selectedSongs = action.payload;
         },
         setTimeStamp: (state, action: PayloadAction<number>) => {
@@ -70,7 +70,7 @@ const Static = createSlice({
             state.timeStamp = 0;
             state.waitingForResponse = false;
             if (!payload.response) return;
-            const soundData = state.playlist.find(song => song.id === payload.position)
+            const soundData = state.playlist[payload.position]
             if (!soundData) return;
             state.position = payload.position;
             soundData.duration = Math.floor(payload.response);

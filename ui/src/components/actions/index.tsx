@@ -6,8 +6,8 @@ import { clearSound, setEditMode, setPlaylist, setSelectedSongs } from '@/stores
 import { memo, useCallback, useState } from 'react'
 import { useAutoAnimate } from '@formkit/auto-animate/react'
 import { toast } from 'react-toastify';
-import { generateSoundId } from '@/utils/misc'
 import { fetchNui } from '@/utils/fetchNui'
+import { nanoid } from '@reduxjs/toolkit'
 
 const Actions = () => {
     const { editMode, selectedSongs, playlist, position } = useAppSelector(state => state.Main)
@@ -19,7 +19,8 @@ const Actions = () => {
         if (selectedSongs.length === 0) return toast.error('No songs selected');
         dispatch(setPlaylist(playlist.filter(song => !selectedSongs.includes(song.id))))
         toast.success('Songs deleted successfully')
-        if (selectedSongs) selectedSongs.includes(position) && dispatch(clearSound())
+        const id = playlist[position]?.id
+        if (selectedSongs && id) selectedSongs.includes(id) && dispatch(clearSound())
         dispatch(setSelectedSongs([]))
         dispatch(setEditMode(false))
     }, [selectedSongs, playlist])
@@ -43,8 +44,8 @@ const Actions = () => {
         if (!response) return toast.error('Invalid url');
         console.log(response)
         const soundData = {
-            id: playlist.length + 1,
-            soundId: generateSoundId(5),
+            id: nanoid(),
+            soundId: nanoid(),
             title: response?.title,
             artist: response?.artist,
             cover: response?.thumbnail,

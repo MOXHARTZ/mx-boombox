@@ -14,15 +14,16 @@ const Playlist = () => {
     const { playlist, playing, position, editMode, selectedSongs, volume } = useAppSelector(state => state.Main)
     const dispatch = useAppDispatch()
     const [animationParent] = useAutoAnimate()
-    const setCurrentSong = useCallback(async (id: number) => {
+    const setCurrentSong = useCallback(async (id: string) => {
         dispatch(setPlaying(false))
+        const position = playlist.findIndex(song => song.id === id)
         dispatch(handlePlay({
-            position: id,
-            soundData: playlist.find(song => song.id === id)!,
+            position,
+            soundData: playlist[position],
             volume
         }))
     }, [position, playlist])
-    const toggleSelectedSong = useCallback((id: number) => {
+    const toggleSelectedSong = useCallback((id: string) => {
         if (selectedSongs.includes(id)) {
             dispatch(setSelectedSongs(selectedSongs.filter(song => song !== id)))
         } else {
@@ -38,10 +39,10 @@ const Playlist = () => {
     }, [editMode, selectedSongs, playlist])
     return (
         <section ref={animationParent} className='bg-zinc-600 p-4 rounded-lg mt-5 gap-4 flex flex-col overflow-auto md:max-h-[calc(100vh-24rem)] xl:max-h-[calc(100vh-18rem)] sm:max-h-[calc(100vh-24rem)]'>
-            {playlist.map(song => (
+            {playlist.map((song, index) => (
                 <article key={song.id} onClick={() => handleSongClick(song)} className={classNames({
                     'w-full flex items-center border-b gap-4 border-zinc-500 pb-4 last:border-0 cursor-pointer hover:bg-zinc-700 p-4 hover:rounded-lg transition-all': true,
-                    'bg-zinc-700 rounded-lg': position === song.id,
+                    'bg-zinc-700 rounded-lg': position === index
                 })}>
                     <aside>
                         {editMode &&
@@ -60,7 +61,7 @@ const Playlist = () => {
                                 <p className='text-slate-400'>{song.artist}</p>
                             </div>
                         </article>
-                        {playing && position === song.id && <Equalizer />}
+                        {playing && position === index && <Equalizer />}
                     </aside>
                 </article>
             ))}

@@ -26,22 +26,26 @@ const Header = () => {
         return `${minute}:${formattedSecond}`;
     }
     const previousBtn = useCallback(async () => {
-        const newPos = position === -1 ? 0 : position - 1
-        if (!playlist.find(song => song.id === newPos)) return toast.error('No more songs in playlist');
+        const index = playlist.findIndex(song => song.id === currentSong?.id)
+        const newPos = index === 0 ? playlist.length - 1 : index - 1
+        if (playlist.length === 0) return toast.error('Playlist is empty');
+        if (playlist[newPos].id === currentSong?.id) return toast.error('No more songs in playlist');
         dispatch(setPlaying(false))
         dispatch(handlePlay({
             position: newPos,
-            soundData: playlist.find(song => song.id === newPos)!,
+            soundData: playlist[newPos],
             volume: volume
         }))
     }, [position, playlist])
     const nextBtn = useCallback(async () => {
-        const newPos = position === -1 ? 0 : position + 1
-        if (!playlist.find(song => song.id === newPos)) return toast.error('No more songs in playlist');
+        const index = playlist.findIndex(song => song.id === currentSong?.id)
+        const newPos = index === playlist.length - 1 ? 0 : index + 1
+        if (playlist.length === 0) return toast.error('Playlist is empty');
+        if (playlist[newPos].id === currentSong?.id) return toast.error('No more songs in playlist');
         dispatch(setPlaying(false))
         dispatch(handlePlay({
             position: newPos,
-            soundData: playlist.find(song => song.id === newPos)!,
+            soundData: playlist[newPos],
             volume: volume
         }))
     }, [position, playlist])
@@ -52,7 +56,7 @@ const Header = () => {
                 currentTimeStamp = Math.floor(currentTimeStamp)
                 dispatch(setTimeStamp(currentTimeStamp))
             }
-            const duration = playlist.find(song => song.id === position)?.duration
+            const duration = playlist[position]?.duration ?? 0
             if (playing && duration && timeStamp === duration) {
                 nextBtn()
             }
@@ -60,7 +64,7 @@ const Header = () => {
         return () => clearInterval(interval)
     }, [playlist, playing, position, timeStamp])
 
-    const currentSong = useAppSelector(state => state.Main.playlist.find(song => song.id === position))
+    const currentSong = useAppSelector(state => state.Main.playlist[position])
     return (
         <header className='grid grid-cols-3 w-full justify-between items-center gap-24'>
             <article className='flex flex-row gap-4'>

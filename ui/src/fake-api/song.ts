@@ -1,6 +1,6 @@
 export const playlist = [
     {
-        id: 1,
+        id: '1',
         soundId: '1',
         title: 'Song 1',
         artist: 'Artist 1',
@@ -9,7 +9,7 @@ export const playlist = [
         duration: 100
     },
     {
-        id: 2,
+        id: '2',
         soundId: '2',
         title: 'Song 2',
         artist: 'Artist 2',
@@ -20,7 +20,7 @@ export const playlist = [
 ] as Song[];
 
 export interface Song {
-    id: number;
+    id: string;
     soundId: string;
     title: string;
     artist: string;

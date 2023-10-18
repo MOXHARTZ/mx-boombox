@@ -18,6 +18,7 @@ import { Song } from './fake-api/song'
 function App() {
   const waitingForResponse = useAppSelector(state => state.Main.waitingForResponse)
   const [visible, setVisible] = useState(IN_DEVELOPMENT);
+  console.log('visible', visible)
   const dispatch = useAppDispatch()
   useEffect(() => {
     if (!IN_DEVELOPMENT) return;
@@ -27,6 +28,7 @@ function App() {
     setVisible(true)
   })
   useEffect(() => {
+    if (IN_DEVELOPMENT) return;
     (async () => {
       const _playlist: Song[] = await fetchNui('getPlaylist')
       dispatch(setPlaylist(_playlist))

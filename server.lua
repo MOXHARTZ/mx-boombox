@@ -10,13 +10,12 @@ RegisterNetEvent('mx-boombox:play', function(url, soundId, netId, volume)
     local player = GetPlayerPed(src)
     local playerCoords = GetEntityCoords(player)
     -- Play the new sound
-    exports['mx-surround']:Play(-1, soundId, url, playerCoords)
+    exports['mx-surround']:Play(-1, soundId, url, playerCoords, false, volume)
     -- Check if the sound was created
     if not soundId then return print('Failed to play sound') end
     -- Attach the sound to the player for everyone
     exports['mx-surround']:attachEntity(-1, soundId, netId)
     exports['mx-surround']:setDestroyOnFinish(-1, soundId, false)
-    exports['mx-surround']:setVolumeMax(-1, soundId, volume)
     sounds[src] = soundId
 end)
 
