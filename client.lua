@@ -9,10 +9,6 @@ local carrying_boombox = false
 
 local current_boombox = nil
 
-local current_sound = nil
-
-local playlist = {}
-
 local function nearbyBoombox()
     local player = PlayerPedId()
     local playerCoords = GetEntityCoords(player)
@@ -25,87 +21,16 @@ local function nearbyBoombox()
     return false
 end
 
-RegisterNUICallback('togglePlay', function(data, cb)
-    if not current_sound then return end
-    current_sound.playing = data.playing
-    if current_sound.playing then
-        TriggerServerEvent('mx-boombox:resume', current_sound.soundId)
-    else
-        TriggerServerEvent('mx-boombox:pause', current_sound.soundId)
-    end
-    cb('ok')
-end)
-
-RegisterNUICallback('getSoundData', function(data, cb)
-    local url = data.url
-    local info = exports['mx-surround']:getInfoFromUrl(url)
-    cb(info)
-end)
-
-RegisterNUICallback('setPlaylist', function(data, cb)
-    playlist = data.playlist
-    SetResourceKvp('boombox_playlist', json.encode(playlist))
-    cb('ok')
-end)
-
 local function openUi()
     local boombox = nearbyBoombox()
     if not boombox then return end
     current_boombox = boombox
-    SetNuiFocus(true, true)
-    SendNUIMessage({
-        action = 'open'
+    exports['mx-audioplayer']:open({
+        onPlay = function(sound)
+            TriggerServerEvent('mx-boombox:attach', sound.soundId, NetworkGetNetworkIdFromEntity(current_boombox))
+        end
     })
 end
-
-RegisterNUICallback('getPlaylist', function(data, cb)
-    local _playlist = GetResourceKvpString('boombox_playlist')
-    if not _playlist then return cb({}) end
-    playlist = json.decode(_playlist)
-    return cb(playlist)
-end)
-
-RegisterNUICallback('play', function(data, cb)
-    if not current_boombox then return end
-    local soundData = data.soundData
-    if not soundData then
-        print('No sound data')
-        return cb(false)
-    end
-    local url = soundData.url
-    local soundId = soundData.soundId
-    local volume = data.volume
-    local netId = NetworkGetNetworkIdFromEntity(current_boombox)
-    TriggerServerEvent('mx-boombox:play', url, soundId, netId, volume)
-    local loaded = exports['mx-surround']:soundIsLoaded(soundId) -- wait for the sound to load
-    if not loaded then return cb(false) end                      -- if it doesn't load, return false
-    current_sound = soundData
-    local maxDuration = exports['mx-surround']:getMaxDuration(soundId)
-    cb(maxDuration)
-end)
-
-RegisterNUICallback('getCurrentTimeStamp', function(data, cb)
-    if not current_sound then return cb(0) end
-    local currentDuration = exports['mx-surround']:getTimeStamp(current_sound.soundId)
-    cb(currentDuration)
-end)
-
-RegisterNUICallback('setVolume', function(data, cb)
-    if not current_sound then return cb(0) end
-    TriggerServerEvent('mx-boombox:setVolume', current_sound.soundId, data.volume)
-    cb('ok')
-end)
-
-RegisterNUICallback('seek', function(data, cb)
-    if not current_sound then return cb(0) end
-    TriggerServerEvent('mx-boombox:seek', current_sound.soundId, data.position)
-    cb('ok')
-end)
-
-RegisterNUICallback('close', function(data, cb)
-    SetNuiFocus(false, false)
-    cb('ok')
-end)
 
 local function loadAnim(dict)
     RequestAnimDict(dict)
