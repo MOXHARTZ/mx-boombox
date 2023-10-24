@@ -107,12 +107,12 @@ local function destroy()
     DeleteEntity(boombox)
 end
 
-RegisterCommand('bx', openUi, false)
+RegisterCommand(Config.AccessBoomboxCommand, openUi, false)
 
-RegisterCommand('bx-create', create, false)
+RegisterCommand(Config.CreateBoomboxCommand, create, false)
 
-RegisterCommand('bx-pickup', pickup, false)
+RegisterCommand(Config.PickupBoomboxCommand, pickup, false)
 
-RegisterCommand('bx-drop', drop, false)
+RegisterCommand(Config.DropBoomboxCommand, drop, false)
 
-RegisterCommand('bx-destroy', destroy, false)
+RegisterCommand(Config.DestroyBoomboxCommand, destroy, false)
