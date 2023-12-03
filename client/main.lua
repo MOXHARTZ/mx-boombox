@@ -1,4 +1,5 @@
 local boombox_ = joaat('prop_boombox_01')
+AudioPlayer = exports['mx-audioplayer']
 
 local carry_anim_dict = 'anim@heists@box_carry@'
 local carry_anim_name = 'idle'
@@ -6,8 +7,6 @@ local put_anim_dict = 'random@domestic'
 local put_anim_name = 'pickup_low'
 
 local carrying_boombox = false
-
-local current_boombox = nil
 
 local function nearbyBoombox()
     local player = PlayerPedId()
@@ -24,12 +23,17 @@ end
 local function openUi()
     local boombox = nearbyBoombox()
     if not boombox then return end
-    current_boombox = boombox
-    exports['mx-audioplayer']:open({
+    local currentBoombox = boombox
+    AudioPlayer:open({
         onPlay = function(sound)
-            TriggerServerEvent('mx-boombox:attach', sound.soundId, NetworkGetNetworkIdFromEntity(current_boombox))
+            if not DoesEntityExist(currentBoombox) then
+                TriggerServerEvent('mx-audioplayer:destroy', sound.soundId)
+                return
+            end
+            local volume = AudioPlayer:getVolume()
+            TriggerServerEvent('mx-boombox:attach', sound.soundId, NetworkGetNetworkIdFromEntity(currentBoombox), volume)
         end
-    })
+    }, nil, true)
 end
 
 local function loadAnim(dict)

@@ -1,7 +1,7 @@
 fx_version 'cerulean'
 games { 'gta5' }
 author 'https://github.com/MOXHARTZ'
-version '1.0.0'
+version '1.0.3'
 repository 'https://github.com/MOXHARTZ/mx-boombox'
 lua54 'yes'
 
